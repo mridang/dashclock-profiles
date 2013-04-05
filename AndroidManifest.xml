@@ -1,15 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mridang.wifiinfo"
-    android:versionCode="1"
-    android:versionName="1.0" >
+    package="com.mridang.profilic"
+    android:versionCode="2"
+    android:versionName="1.0.1" >
 
     <uses-sdk
         android:minSdkVersion="17"
         android:targetSdkVersion="17" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
         android:allowBackup="true"
@@ -17,7 +15,7 @@
         android:label="@string/application_name"
         android:theme="@android:style/Theme.Holo.Light.DarkActionBar" >
         <service
-            android:name="com.mridang.wifiinfo.WifiinfoWidget"
+            android:name="com.mridang.profilic.ProfilicWidget"
             android:icon="@drawable/ic_dashclock"
             android:label="@string/extension_name"
             android:permission="com.google.android.apps.dashclock.permission.READ_EXTENSION_DATA" >

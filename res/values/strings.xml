@@ -1,7 +1,11 @@
 <resources>
 
-    <string name="extension_name">Wireless Information</string>
-    <string name="application_name">Dashclock Wifi Info Extension</string>
-    <string name="extension_info">Displays information about your current wireless network.</string>
+    <string name="current_profile">Profile</string>
+    <string name="ringer_normal">Your ringer is set to ring</string>
+    <string name="ringer_vibrate">Your ringer is set to vibrate</string>
+    <string name="ringer_silent">Your ringer is set to silent</string>
+    <string name="extension_name">Profiles</string>
+    <string name="application_name">Dashclock Profiles Extension</string>
+    <string name="extension_info">Displays information about your currently activated profile.</string>
 
 </resources>

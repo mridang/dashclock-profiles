@@ -91,73 +91,69 @@ public class ProfilicWidget extends DashClockExtension {
 		ExtensionData edtInformation = new ExtensionData();
 		edtInformation.visible(false);
 
-		Log.d("ProfilicWidget", "Checking if the system is Cyanogenmod");
-		if (System.getProperty("os.version").contains("cyanogenmod") || System.getProperty("os.version").contains("-CM-")) { 
+		Log.d("ProfilicWidget", "Checking if profiles are on");
+		if (Settings.System.getInt(getContentResolver(), "system_profiles_enabled", 1) == 1) { 
 
-			Log.d("ProfilicWidget", "Checking if profiles are on");
-			if (Settings.System.getInt(getContentResolver(), "system_profiles_enabled", 1) == 1) { 
+			Log.d("ProfilicWidget", "Profiles are activated");
+			Object o = getSystemService("profile");
+			try {
 
-				Log.d("ProfilicWidget", "Profiles are activated");
-				Object o = getSystemService("profile");
-				try {
+				Log.d("ProfilicWidget", "Fetching the profile name and ringer mode");
+				Class<?> ProfileManager = Class.forName("android.app.ProfileManager");
+				Class<?> Profile = Class.forName("android.app.Profile");
 
-					Log.d("ProfilicWidget", "Fetching the profile name and ringer mode");
-					Class<?> ProfileManager = Class.forName("android.app.ProfileManager");
-					Class<?> Profile = Class.forName("android.app.Profile");
+				Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile", null);
+				Method getName = Profile.getDeclaredMethod("getName", null);
 
-					Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile", null);
-					Method getName = Profile.getDeclaredMethod("getName", null);
+				switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
+				case AudioManager.RINGER_MODE_SILENT:
+					Log.d("ProfilicWidget", "Ringer is off");
+					edtInformation.visible(true);
+					edtInformation
+					.status(getString(R.string.current_profile)
+							+ " \u2014 " + (String) getName
+							.invoke(getActiveProfile
+									.invoke(o)));
+					edtInformation.expandedBody(getString(R.string.ringer_silent));
+					edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+					break;
 
-					switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
-					case AudioManager.RINGER_MODE_SILENT:
-						Log.d("ProfilicWidget", "Ringer is off");
-						edtInformation.visible(true);
-						edtInformation
-						.status(getString(R.string.current_profile)
-								+ " \u2014 " + (String) getName
-								.invoke(getActiveProfile
-										.invoke(o)));
-						edtInformation.expandedBody(getString(R.string.ringer_silent));
-						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-						break;
+				case AudioManager.RINGER_MODE_VIBRATE:
+					Log.d("ProfilicWidget", "Vibration is on");
+					edtInformation.visible(true);
+					edtInformation
+					.status(getString(R.string.current_profile)
+							+ " \u2014 " + (String) getName
+							.invoke(getActiveProfile
+									.invoke(o)));
+					edtInformation.expandedBody(getString(R.string.ringer_vibrate));
+					edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+					break;
 
-					case AudioManager.RINGER_MODE_VIBRATE:
-						Log.d("ProfilicWidget", "Vibration is on");
-						edtInformation.visible(true);
-						edtInformation
-						.status(getString(R.string.current_profile)
-								+ " \u2014 " + (String) getName
-								.invoke(getActiveProfile
-										.invoke(o)));
-						edtInformation.expandedBody(getString(R.string.ringer_vibrate));
-						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-						break;
-
-					case AudioManager.RINGER_MODE_NORMAL:
-						Log.d("ProfilicWidget", "Ringer is normal");
-						edtInformation.visible(true);
-						edtInformation
-						.status(getString(R.string.current_profile)
-								+ " \u2014 " + (String) getName
-								.invoke(getActiveProfile
-										.invoke(o)));
-						edtInformation.expandedBody(getString(R.string.ringer_normal));
-						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-						break;
-					}
-
-				} catch (Exception e) {
-					Log.e("ProfilicWidget", "Encountered an error", e);
-					BugSenseHandler.sendException(e);
+				case AudioManager.RINGER_MODE_NORMAL:
+					Log.d("ProfilicWidget", "Ringer is normal");
+					edtInformation.visible(true);
+					edtInformation
+					.status(getString(R.string.current_profile)
+							+ " \u2014 " + (String) getName
+							.invoke(getActiveProfile
+									.invoke(o)));
+					edtInformation.expandedBody(getString(R.string.ringer_normal));
+					edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+					break;
 				}
 
-			} else {
-				Log.d("ProfilicWidget", "Profiles are disabled");
+			} catch (NoSuchMethodException e) {
+				Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
+			} catch (ClassNotFoundException e) {
+				Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
+			} catch (Exception e) {
+				Log.e("ProfilicWidget", "Encountered an error", e);
+				BugSenseHandler.sendException(e);
 			}
 
 		} else {
-			Log.w("ProfilicWidget", "The operating system isn't Cyanogenmod");
-			Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
+			Log.d("ProfilicWidget", "Profiles are disabled");
 		}
 
 		edtInformation.icon(R.drawable.ic_dashclock);

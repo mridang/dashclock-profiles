@@ -1,12 +1,17 @@
 package com.mridang.profilic;
 
 import java.lang.reflect.Method;
+import java.util.Random;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -21,7 +26,7 @@ import com.google.android.apps.dashclock.api.ExtensionData;
 public class ProfilicWidget extends DashClockExtension {
 
 	/* This is the instance of the receiver that deals with profile status */
-	private ToggleReceiver objReceiver;
+	private ToggleReceiver objProfilesReceiver;
 
 	/*
 	 * This class is the receiver for getting hotspot toggle events
@@ -48,11 +53,11 @@ public class ProfilicWidget extends DashClockExtension {
 
 		super.onInitialize(booReconnect);
 
-		if (objReceiver != null) {
+		if (objProfilesReceiver != null) {
 			try {
 
 				Log.d("ProfilicWidget", "Unregistered any existing status receivers");
-				unregisterReceiver(objReceiver);
+				unregisterReceiver(objProfilesReceiver);
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -60,8 +65,8 @@ public class ProfilicWidget extends DashClockExtension {
 
 		}
 
-		objReceiver = new ToggleReceiver();
-		registerReceiver(objReceiver, new IntentFilter("android.app.profiles.PROFILES_STATE_CHANGED"));
+		objProfilesReceiver = new ToggleReceiver();
+		registerReceiver(objProfilesReceiver, new IntentFilter("android.app.profiles.PROFILES_STATE_CHANGED"));
 		Log.d("ProfilicWidget", "Registered the status receiver");
 
 	}
@@ -91,69 +96,110 @@ public class ProfilicWidget extends DashClockExtension {
 		ExtensionData edtInformation = new ExtensionData();
 		edtInformation.visible(false);
 
-		Log.d("ProfilicWidget", "Checking if profiles are on");
-		if (Settings.System.getInt(getContentResolver(), "system_profiles_enabled", 1) == 1) { 
+		try {
 
-			Log.d("ProfilicWidget", "Profiles are activated");
-			Object o = getSystemService("profile");
-			try {
+			Log.d("ProfilicWidget", "Checking if profiles are on");
+			if (Settings.System.getInt(getContentResolver(), "system_profiles_enabled", 1) == 1) { 
 
-				Log.d("ProfilicWidget", "Fetching the profile name and ringer mode");
-				Class<?> ProfileManager = Class.forName("android.app.ProfileManager");
-				Class<?> Profile = Class.forName("android.app.Profile");
+				Log.d("ProfilicWidget", "Profiles are activated");
+				Object o = getSystemService("profile");
+				try {
 
-				Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile", null);
-				Method getName = Profile.getDeclaredMethod("getName", null);
+					Log.d("ProfilicWidget", "Fetching the profile name and ringer mode");
+					Class<?> ProfileManager = Class.forName("android.app.ProfileManager");
+					Class<?> Profile = Class.forName("android.app.Profile");
 
-				switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
-				case AudioManager.RINGER_MODE_SILENT:
-					Log.d("ProfilicWidget", "Ringer is off");
-					edtInformation.visible(true);
-					edtInformation
-					.status(getString(R.string.current_profile)
-							+ " \u2014 " + (String) getName
-							.invoke(getActiveProfile
-									.invoke(o)));
-					edtInformation.expandedBody(getString(R.string.ringer_silent));
-					edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-					break;
+					Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile", null);
+					Method getName = Profile.getDeclaredMethod("getName", null);
 
-				case AudioManager.RINGER_MODE_VIBRATE:
-					Log.d("ProfilicWidget", "Vibration is on");
-					edtInformation.visible(true);
-					edtInformation
-					.status(getString(R.string.current_profile)
-							+ " \u2014 " + (String) getName
-							.invoke(getActiveProfile
-									.invoke(o)));
-					edtInformation.expandedBody(getString(R.string.ringer_vibrate));
-					edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-					break;
+					switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
+					case AudioManager.RINGER_MODE_SILENT:
+						Log.d("ProfilicWidget", "Ringer is off");
+						edtInformation.visible(true);
+						edtInformation
+						.status(getString(R.string.current_profile)
+								+ " \u2014 " + (String) getName
+								.invoke(getActiveProfile
+										.invoke(o)));
+						edtInformation.expandedBody(getString(R.string.ringer_silent));
+						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+						break;
 
-				case AudioManager.RINGER_MODE_NORMAL:
-					Log.d("ProfilicWidget", "Ringer is normal");
-					edtInformation.visible(true);
-					edtInformation
-					.status(getString(R.string.current_profile)
-							+ " \u2014 " + (String) getName
-							.invoke(getActiveProfile
-									.invoke(o)));
-					edtInformation.expandedBody(getString(R.string.ringer_normal));
-					edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-					break;
+					case AudioManager.RINGER_MODE_VIBRATE:
+						Log.d("ProfilicWidget", "Vibration is on");
+						edtInformation.visible(true);
+						edtInformation
+						.status(getString(R.string.current_profile)
+								+ " \u2014 " + (String) getName
+								.invoke(getActiveProfile
+										.invoke(o)));
+						edtInformation.expandedBody(getString(R.string.ringer_vibrate));
+						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+						break;
+
+					case AudioManager.RINGER_MODE_NORMAL:
+						Log.d("ProfilicWidget", "Ringer is normal");
+						edtInformation.visible(true);
+						edtInformation
+						.status(getString(R.string.current_profile)
+								+ " \u2014 " + (String) getName
+								.invoke(getActiveProfile
+										.invoke(o)));
+						edtInformation.expandedBody(getString(R.string.ringer_normal));
+						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+						break;
+					}
+
+				} catch (NoSuchMethodException e) {
+					Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
+				} catch (ClassNotFoundException e) {
+					Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
+				} catch (Exception e) {
+					Log.e("ProfilicWidget", "Encountered an error", e);
+					BugSenseHandler.sendException(e);
 				}
 
-			} catch (NoSuchMethodException e) {
-				Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
-			} catch (ClassNotFoundException e) {
-				Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
-			} catch (Exception e) {
-				Log.e("ProfilicWidget", "Encountered an error", e);
-				BugSenseHandler.sendException(e);
+			} else {
+				Log.d("ProfilicWidget", "Profiles are disabled");
 			}
 
-		} else {
-			Log.d("ProfilicWidget", "Profiles are disabled");
+			if (new Random().nextInt(5) == 0) {
+
+				PackageManager mgrPackages = getApplicationContext().getPackageManager();
+
+				try {
+
+					mgrPackages.getPackageInfo("com.mridang.donate", PackageManager.GET_META_DATA);
+
+				} catch (NameNotFoundException e) {
+
+					Integer intExtensions = 0;
+
+					for (PackageInfo pkgPackage : mgrPackages.getInstalledPackages(0)) {
+
+						intExtensions = intExtensions + (pkgPackage.applicationInfo.packageName.startsWith("com.mridang.") ? 1 : 0); 
+
+					}
+
+					if (intExtensions > 1) {
+
+						edtInformation.visible(true);
+						edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW).setData(Uri.parse("market://details?id=com.mridang.donate")));
+						edtInformation.expandedTitle("Please consider a one time purchase to unlock.");
+						edtInformation.expandedBody("Thank you for using " + intExtensions + " extensions of mine. Click this to make a one-time purchase or use just one extension to make this disappear.");
+						setUpdateWhenScreenOn(true);
+
+					}
+
+				}
+
+			} else {
+				setUpdateWhenScreenOn(true);
+			}
+
+		} catch (Exception e) {
+			Log.e("HotspotWidget", "Encountered an error", e);
+			BugSenseHandler.sendException(e);
 		}
 
 		edtInformation.icon(R.drawable.ic_dashclock);
@@ -168,6 +214,20 @@ public class ProfilicWidget extends DashClockExtension {
 	public void onDestroy() {
 
 		super.onDestroy();
+
+		if (objProfilesReceiver != null) {
+
+			try {
+
+				Log.d("ProfilicWidget", "Unregistered the status receiver");
+				unregisterReceiver(objProfilesReceiver);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		}
+
 		Log.d("ProfilicWidget", "Destroyed");
 		BugSenseHandler.closeSession(this);
 

@@ -90,11 +90,9 @@ public class ProfilicWidget extends DashClockExtension {
 	@Override
 	protected void onUpdateData(int arg0) {
 
-		setUpdateWhenScreenOn(true);
-
 		Log.d("ProfilicWidget", "Getting the currently activated profile");
-		ExtensionData edtInformation = new ExtensionData();
-		edtInformation.visible(false);
+		ExtensionData edtInformation = new ExtensionData();		
+		setUpdateWhenScreenOn(true);
 
 		try {
 
@@ -151,8 +149,12 @@ public class ProfilicWidget extends DashClockExtension {
 					}
 
 				} catch (NoSuchMethodException e) {
+					edtInformation.visible(false);
+					Log.e("ProfilicWidget", "Possibly not using Cyanogenmod", e);
 					Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
 				} catch (ClassNotFoundException e) {
+					edtInformation.visible(false);
+					Log.e("ProfilicWidget", "Possibly not using Cyanogenmod", e);
 					Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
 				} catch (Exception e) {
 					Log.e("ProfilicWidget", "Encountered an error", e);
@@ -198,6 +200,7 @@ public class ProfilicWidget extends DashClockExtension {
 			}
 
 		} catch (Exception e) {
+			edtInformation.visible(false);
 			Log.e("HotspotWidget", "Encountered an error", e);
 			BugSenseHandler.sendException(e);
 		}

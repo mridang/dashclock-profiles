@@ -26,20 +26,20 @@ import com.google.android.apps.dashclock.api.ExtensionData;
 public class ProfilicWidget extends DashClockExtension {
 
 	/* This is the instance of the receiver that deals with profile status */
-	private ToggleReceiver objProfilesReceiver;
+	private ProfilesReceiver objProfilesReceiver;
 
 	/*
 	 * This class is the receiver for getting hotspot toggle events
 	 */
-	private class ToggleReceiver extends BroadcastReceiver {
+	private class ProfilesReceiver extends BroadcastReceiver {
 
 		/*
 		 * @see android.content.BroadcastReceiver#onReceive(android.content.Context, android.content.Intent)
 		 */
 		@Override
-		public void onReceive(Context context, Intent intent) {
+		public void onReceive(Context ctxContext, Intent ittIntent) {
 
-			onUpdateData(1);
+			onUpdateData(0);
 
 		}
 
@@ -65,8 +65,12 @@ public class ProfilicWidget extends DashClockExtension {
 
 		}
 
-		objProfilesReceiver = new ToggleReceiver();
-		registerReceiver(objProfilesReceiver, new IntentFilter("android.app.profiles.PROFILES_STATE_CHANGED"));
+		IntentFilter itfIntents = new IntentFilter("android.app.profiles.PROFILES_STATE_CHANGED");
+		itfIntents.addAction("android.intent.action.PROFILE_SELECTED");
+		itfIntents.addAction("android.intent.action.PROFILE_UPDATED");
+
+		objProfilesReceiver = new ProfilesReceiver();
+		registerReceiver(objProfilesReceiver, itfIntents);
 		Log.d("ProfilicWidget", "Registered the status receiver");
 
 	}
@@ -88,11 +92,11 @@ public class ProfilicWidget extends DashClockExtension {
 	 * (int)
 	 */
 	@Override
-	protected void onUpdateData(int arg0) {
+	protected void onUpdateData(int intReason) {
 
 		Log.d("ProfilicWidget", "Getting the currently activated profile");
 		ExtensionData edtInformation = new ExtensionData();		
-		setUpdateWhenScreenOn(true);
+		setUpdateWhenScreenOn(false);
 
 		try {
 
@@ -101,65 +105,42 @@ public class ProfilicWidget extends DashClockExtension {
 
 				Log.d("ProfilicWidget", "Profiles are activated");
 				Object o = getSystemService("profile");
-				try {
 
-					Log.d("ProfilicWidget", "Fetching the profile name and ringer mode");
-					Class<?> ProfileManager = Class.forName("android.app.ProfileManager");
-					Class<?> Profile = Class.forName("android.app.Profile");
+				Log.d("ProfilicWidget", "Fetching the profile name and ringer mode");
+				Class<?> ProfileManager = Class.forName("android.app.ProfileManager");
+				Class<?> Profile = Class.forName("android.app.Profile");
 
-					Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile", null);
-					Method getName = Profile.getDeclaredMethod("getName", null);
+				Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile", null);
+				Method getName = Profile.getDeclaredMethod("getName", null);
 
-					switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
-					case AudioManager.RINGER_MODE_SILENT:
-						Log.d("ProfilicWidget", "Ringer is off");
-						edtInformation.visible(true);
-						edtInformation
-						.status(getString(R.string.current_profile)
-								+ " \u2014 " + (String) getName
-								.invoke(getActiveProfile
-										.invoke(o)));
-						edtInformation.expandedBody(getString(R.string.ringer_silent));
-						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-						break;
+				switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
+				case AudioManager.RINGER_MODE_SILENT:
+					Log.d("ProfilicWidget", "Ringer is off");
+					edtInformation.status(getString(
+							R.string.current_profile, (String) getName
+							.invoke(getActiveProfile.invoke(o))));
+					edtInformation.expandedBody(getString(R.string.ringer_silent));
+					break;
 
-					case AudioManager.RINGER_MODE_VIBRATE:
-						Log.d("ProfilicWidget", "Vibration is on");
-						edtInformation.visible(true);
-						edtInformation
-						.status(getString(R.string.current_profile)
-								+ " \u2014 " + (String) getName
-								.invoke(getActiveProfile
-										.invoke(o)));
-						edtInformation.expandedBody(getString(R.string.ringer_vibrate));
-						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-						break;
+				case AudioManager.RINGER_MODE_VIBRATE:
+					Log.d("ProfilicWidget", "Vibration is on");
+					edtInformation.status(getString(
+							R.string.current_profile, (String) getName
+							.invoke(getActiveProfile.invoke(o))));
+					edtInformation.expandedBody(getString(R.string.ringer_vibrate));
+					break;
 
-					case AudioManager.RINGER_MODE_NORMAL:
-						Log.d("ProfilicWidget", "Ringer is normal");
-						edtInformation.visible(true);
-						edtInformation
-						.status(getString(R.string.current_profile)
-								+ " \u2014 " + (String) getName
-								.invoke(getActiveProfile
-										.invoke(o)));
-						edtInformation.expandedBody(getString(R.string.ringer_normal));
-						edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
-						break;
-					}
-
-				} catch (NoSuchMethodException e) {
-					edtInformation.visible(false);
-					Log.e("ProfilicWidget", "Possibly not using Cyanogenmod", e);
-					Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
-				} catch (ClassNotFoundException e) {
-					edtInformation.visible(false);
-					Log.e("ProfilicWidget", "Possibly not using Cyanogenmod", e);
-					Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
-				} catch (Exception e) {
-					Log.e("ProfilicWidget", "Encountered an error", e);
-					BugSenseHandler.sendException(e);
+				case AudioManager.RINGER_MODE_NORMAL:
+					Log.d("ProfilicWidget", "Phone is silent");
+					edtInformation.status(getString(
+							R.string.current_profile, (String) getName
+							.invoke(getActiveProfile.invoke(o))));
+					edtInformation.expandedBody(getString(R.string.ringer_normal));
+					break;
 				}
+
+				edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+				edtInformation.visible(true);
 
 			} else {
 				Log.d("ProfilicWidget", "Profiles are disabled");
@@ -196,12 +177,20 @@ public class ProfilicWidget extends DashClockExtension {
 				}
 
 			} else {
-				setUpdateWhenScreenOn(true);
+				setUpdateWhenScreenOn(false);
 			}
 
+		} catch (NoSuchMethodException e) {
+			edtInformation.visible(false);
+			Log.e("ProfilicWidget", "Possibly not using Cyanogenmod", e);
+			Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
+		} catch (ClassNotFoundException e) {
+			edtInformation.visible(false);
+			Log.e("ProfilicWidget", "Possibly not using Cyanogenmod", e);
+			Toast.makeText(getApplicationContext(), R.string.no_cyanogenmod, Toast.LENGTH_LONG).show();
 		} catch (Exception e) {
 			edtInformation.visible(false);
-			Log.e("HotspotWidget", "Encountered an error", e);
+			Log.e("ProfilicWidget", "Encountered an error", e);
 			BugSenseHandler.sendException(e);
 		}
 

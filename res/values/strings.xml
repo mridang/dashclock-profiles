@@ -1,12 +1,12 @@
 <resources>
 
     <string name="no_cyanogenmod">The Profiles extension for Dashclock requires Cyanogenmod to work. Please uninstall the extension or switch to Cyanogenmod.</string>
-    <string name="current_profile">Profile</string>
-    <string name="ringer_normal">Your ringer is set to ring</string>
-    <string name="ringer_vibrate">Your ringer is set to vibrate</string>
-    <string name="ringer_silent">Your ringer is set to silent</string>
+    <string name="current_profile">%1$s profile</string>
+    <string name="ringer_normal">Ringer</string>
+    <string name="ringer_vibrate">Vibrate</string>
+    <string name="ringer_silent">Silent</string>
     <string name="extension_name">Profiles</string>
     <string name="application_name">Dashclock Profiles Extension</string>
-    <string name="extension_info">Displays information about your currently activated profile.</string>
+    <string name="extension_info">Displays information about your device\'s currently activated profile.</string>
 
 </resources>

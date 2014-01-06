@@ -1,7 +1,7 @@
 <resources>
 
     <string name="no_cyanogenmod">The Profiles extension for Dashclock requires Cyanogenmod to work. Please uninstall the extension or switch to Cyanogenmod.</string>
-    <string name="current_profile">%1$s profile</string>
+    <string name="current_profile">%1$s profile activated</string>
     <string name="ringer_normal">Ringer</string>
     <string name="ringer_vibrate">Vibrate</string>
     <string name="ringer_silent">Silent</string>

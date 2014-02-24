@@ -110,36 +110,34 @@ public class ProfilicWidget extends DashClockExtension {
 				Class<?> ProfileManager = Class.forName("android.app.ProfileManager");
 				Class<?> Profile = Class.forName("android.app.Profile");
 
-				Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile", null);
-				Method getName = Profile.getDeclaredMethod("getName", null);
+				final Method getActiveProfile = ProfileManager.getDeclaredMethod("getActiveProfile");
+				final Method getName = Profile.getDeclaredMethod("getName");
+				final String strName = (String) getName.invoke(getActiveProfile.invoke(o));
 
 				switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
 				case AudioManager.RINGER_MODE_SILENT:
 					Log.d("ProfilicWidget", "Ringer is off");
 					edtInformation.status(getString(
-							R.string.current_profile, (String) getName
-							.invoke(getActiveProfile.invoke(o))));
+							R.string.current_profile, strName));
 					edtInformation.expandedBody(getString(R.string.ringer_silent));
 					break;
 
 				case AudioManager.RINGER_MODE_VIBRATE:
 					Log.d("ProfilicWidget", "Vibration is on");
 					edtInformation.status(getString(
-							R.string.current_profile, (String) getName
-							.invoke(getActiveProfile.invoke(o))));
+							R.string.current_profile, strName));
 					edtInformation.expandedBody(getString(R.string.ringer_vibrate));
 					break;
 
 				case AudioManager.RINGER_MODE_NORMAL:
 					Log.d("ProfilicWidget", "Phone is silent");
 					edtInformation.status(getString(
-							R.string.current_profile, (String) getName
-							.invoke(getActiveProfile.invoke(o))));
+							R.string.current_profile, strName));
 					edtInformation.expandedBody(getString(R.string.ringer_normal));
 					break;
 				}
 
-				edtInformation.clickIntent(new Intent("android.intent.action.PROFILE_PICKER"));
+				edtInformation.clickIntent(new Intent("android.settings.PROFILES_SETTINGS"));
 				edtInformation.visible(true);
 
 			} else {
@@ -157,12 +155,12 @@ public class ProfilicWidget extends DashClockExtension {
 				} catch (NameNotFoundException e) {
 
 					Integer intExtensions = 0;
-				    Intent ittFilter = new Intent("com.google.android.apps.dashclock.Extension");
-				    String strPackage;
+					Intent ittFilter = new Intent("com.google.android.apps.dashclock.Extension");
+					String strPackage;
 
-				    for (ResolveInfo info : mgrPackages.queryIntentServices(ittFilter, 0)) {
+					for (ResolveInfo info : mgrPackages.queryIntentServices(ittFilter, 0)) {
 
-				    	strPackage = info.serviceInfo.applicationInfo.packageName;
+						strPackage = info.serviceInfo.applicationInfo.packageName;
 						intExtensions = intExtensions + (strPackage.startsWith("com.mridang.") ? 1 : 0); 
 
 					}

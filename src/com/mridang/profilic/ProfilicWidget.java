@@ -3,10 +3,13 @@ package com.mridang.profilic;
 import java.lang.reflect.Method;
 import java.util.Random;
 
+import org.acra.ACRA;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
@@ -16,7 +19,6 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.bugsense.trace.BugSenseHandler;
 import com.google.android.apps.dashclock.api.DashClockExtension;
 import com.google.android.apps.dashclock.api.ExtensionData;
 
@@ -34,7 +36,9 @@ public class ProfilicWidget extends DashClockExtension {
 	private class ProfilesReceiver extends BroadcastReceiver {
 
 		/*
-		 * @see android.content.BroadcastReceiver#onReceive(android.content.Context, android.content.Intent)
+		 * @see
+		 * android.content.BroadcastReceiver#onReceive(android.content.Context,
+		 * android.content.Intent)
 		 */
 		@Override
 		public void onReceive(Context ctxContext, Intent ittIntent) {
@@ -46,7 +50,9 @@ public class ProfilicWidget extends DashClockExtension {
 	}
 
 	/*
-	 * @see com.google.android.apps.dashclock.api.DashClockExtension#onInitialize(boolean)
+	 * @see
+	 * com.google.android.apps.dashclock.api.DashClockExtension#onInitialize
+	 * (boolean)
 	 */
 	@Override
 	protected void onInitialize(boolean booReconnect) {
@@ -82,7 +88,7 @@ public class ProfilicWidget extends DashClockExtension {
 
 		super.onCreate();
 		Log.d("ProfilicWidget", "Created");
-		BugSenseHandler.initAndStartSession(this, getString(R.string.bugsense));
+		ACRA.init(new AcraApplication(getApplicationContext()));
 
 	}
 
@@ -95,13 +101,13 @@ public class ProfilicWidget extends DashClockExtension {
 	protected void onUpdateData(int intReason) {
 
 		Log.d("ProfilicWidget", "Getting the currently activated profile");
-		ExtensionData edtInformation = new ExtensionData();		
+		ExtensionData edtInformation = new ExtensionData();
 		setUpdateWhenScreenOn(false);
 
 		try {
 
 			Log.d("ProfilicWidget", "Checking if profiles are on");
-			if (Settings.System.getInt(getContentResolver(), "system_profiles_enabled", 1) == 1) { 
+			if (Settings.System.getInt(getContentResolver(), "system_profiles_enabled", 1) == 1) {
 
 				Log.d("ProfilicWidget", "Profiles are activated");
 				Object o = getSystemService("profile");
@@ -114,25 +120,22 @@ public class ProfilicWidget extends DashClockExtension {
 				final Method getName = Profile.getDeclaredMethod("getName");
 				final String strName = (String) getName.invoke(getActiveProfile.invoke(o));
 
-				switch (((AudioManager)getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
+				switch (((AudioManager) getSystemService(Context.AUDIO_SERVICE)).getRingerMode()) {
 				case AudioManager.RINGER_MODE_SILENT:
 					Log.d("ProfilicWidget", "Ringer is off");
-					edtInformation.status(getString(
-							R.string.current_profile, strName));
+					edtInformation.status(getString(R.string.current_profile, strName));
 					edtInformation.expandedBody(getString(R.string.ringer_silent));
 					break;
 
 				case AudioManager.RINGER_MODE_VIBRATE:
 					Log.d("ProfilicWidget", "Vibration is on");
-					edtInformation.status(getString(
-							R.string.current_profile, strName));
+					edtInformation.status(getString(R.string.current_profile, strName));
 					edtInformation.expandedBody(getString(R.string.ringer_vibrate));
 					break;
 
 				case AudioManager.RINGER_MODE_NORMAL:
 					Log.d("ProfilicWidget", "Phone is silent");
-					edtInformation.status(getString(
-							R.string.current_profile, strName));
+					edtInformation.status(getString(R.string.current_profile, strName));
 					edtInformation.expandedBody(getString(R.string.ringer_normal));
 					break;
 				}
@@ -144,7 +147,7 @@ public class ProfilicWidget extends DashClockExtension {
 				Log.d("ProfilicWidget", "Profiles are disabled");
 			}
 
-			if (new Random().nextInt(5) == 0) {
+			if (new Random().nextInt(5) == 0 && !(0 != (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))) {
 
 				PackageManager mgrPackages = getApplicationContext().getPackageManager();
 
@@ -161,16 +164,20 @@ public class ProfilicWidget extends DashClockExtension {
 					for (ResolveInfo info : mgrPackages.queryIntentServices(ittFilter, 0)) {
 
 						strPackage = info.serviceInfo.applicationInfo.packageName;
-						intExtensions = intExtensions + (strPackage.startsWith("com.mridang.") ? 1 : 0); 
+						intExtensions = intExtensions + (strPackage.startsWith("com.mridang.") ? 1 : 0);
 
 					}
 
 					if (intExtensions > 1) {
 
 						edtInformation.visible(true);
-						edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW).setData(Uri.parse("market://details?id=com.mridang.donate")));
+						edtInformation.clickIntent(new Intent(Intent.ACTION_VIEW).setData(Uri
+								.parse("market://details?id=com.mridang.donate")));
 						edtInformation.expandedTitle("Please consider a one time purchase to unlock.");
-						edtInformation.expandedBody("Thank you for using " + intExtensions + " extensions of mine. Click this to make a one-time purchase or use just one extension to make this disappear.");
+						edtInformation
+								.expandedBody("Thank you for using "
+										+ intExtensions
+										+ " extensions of mine. Click this to make a one-time purchase or use just one extension to make this disappear.");
 						setUpdateWhenScreenOn(true);
 
 					}
@@ -192,7 +199,7 @@ public class ProfilicWidget extends DashClockExtension {
 		} catch (Exception e) {
 			edtInformation.visible(false);
 			Log.e("ProfilicWidget", "Encountered an error", e);
-			BugSenseHandler.sendException(e);
+			ACRA.getErrorReporter().handleSilentException(e);
 		}
 
 		edtInformation.icon(R.drawable.ic_dashclock);
@@ -222,7 +229,6 @@ public class ProfilicWidget extends DashClockExtension {
 		}
 
 		Log.d("ProfilicWidget", "Destroyed");
-		BugSenseHandler.closeSession(this);
 
 	}
 
